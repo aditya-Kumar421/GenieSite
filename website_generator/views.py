@@ -163,7 +163,7 @@ class GeneratePreviewView(APIView):
                           status=status.HTTP_404_NOT_FOUND)
         
         url_token = website_manager.generate_preview(website_id)
-        preview_url = f"{request.scheme}://{request.get_host()}/api/websites/preview/{url_token}/"
+        preview_url = f"{request.scheme}://{request.get_host()}/website/preview/{url_token}/"
         
         return Response({
             'preview_url': preview_url,
