@@ -56,7 +56,17 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
-    ]
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'user.throttling.CustomScopedRateThrottle',  # Use custom throttle
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'auth': '50/hour',         # Authentication endpoints (signup, login)
+        'website_generation': '5/hour',  # AI website generation
+        'website_management': '100/hour', # CRUD operations
+        'preview': '20/hour',      # Preview generation
+        'anon': '10/hour',         # Anonymous access (e.g., preview viewing)
+    }
 }
 MONGO_URI = config('MONGO_URI')
 MONGO_DB_NAME = 'ai_website_builder'
@@ -68,6 +78,17 @@ MONGO_DB_NAME = 'ai_website_builder'
 #     }
 # }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"rediss://{config('UPSTASH_REDIS_HOST')}:{config('UPSTASH_REDIS_PORT')}",
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'PASSWORD': config('UPSTASH_REDIS_PASSWORD'),
+            'SSL': True, 
+        }
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -109,3 +130,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True

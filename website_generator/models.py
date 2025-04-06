@@ -1,7 +1,9 @@
+# website_generator/models.py
 from pymongo import MongoClient
 from django.conf import settings
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
+import uuid
 
 class WebsiteManager:
     def __init__(self):
@@ -16,7 +18,11 @@ class WebsiteManager:
             'industry': industry,
             'structure': structure,
             'created_at': datetime.now(),
-            'updated_at': datetime.now()
+            'updated_at': datetime.now(),
+            'preview': {
+                'url_token': None,
+                'expires_at': None
+            }
         }
         result = self.websites.insert_one(website)
         return str(result.inserted_id)
@@ -36,3 +42,27 @@ class WebsiteManager:
 
     def delete_website(self, website_id):
         return self.websites.delete_one({'_id': ObjectId(website_id)})
+
+    def generate_preview(self, website_id):
+        website = self.get_website(website_id)
+        if not website:
+            return None
+        
+        # Generate unique token and set expiration (e.g., 24 hours)
+        url_token = str(uuid.uuid4())
+        expires_at = datetime.now() + timedelta(hours=24)
+        
+        self.websites.update_one(
+            {'_id': ObjectId(website_id)},
+            {'$set': {
+                'preview.url_token': url_token,
+                'preview.expires_at': expires_at
+            }}
+        )
+        return url_token
+
+    def get_website_by_token(self, url_token):
+        return self.websites.find_one({
+            'preview.url_token': url_token,
+            'preview.expires_at': {'$gt': datetime.now()}
+        })

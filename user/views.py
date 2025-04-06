@@ -9,6 +9,8 @@ from django.conf import settings
 import bcrypt
 
 class SignupView(APIView):
+    throttle_scope = 'auth'
+
     def post(self, request):
         serializer = UserSignupSerializer(data=request.data)
         if serializer.is_valid():
@@ -34,6 +36,8 @@ class SignupView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
+    throttle_scope = 'auth'
+
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -67,6 +71,8 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserDetailsView(APIView):
+    throttle_scope = 'auth'
+    
     def get(self, request):
         user_manager = UserManager()
         user = user_manager.find_user_by_id(request.user)  # request.user is user_id from JWT
