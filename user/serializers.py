@@ -1,22 +1,36 @@
 from rest_framework import serializers
-from .models import UserManager
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
-class UserSignupSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=100)
-    email = serializers.EmailField()
-    password = serializers.CharField(max_length=100, write_only=True)
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
-    def validate_email(self, value):
-        user_manager = UserManager()
-        if user_manager.find_user_by_email(value):
-            raise serializers.ValidationError("Email already exists")
-        return value
-    
-class UserLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(max_length=100)
+class SignupSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    confirm_password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
 
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'confirm_password']
 
-class UserDetailsSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=100)
-    email = serializers.EmailField()
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Passwords must match."})
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        user = User.objects.create_user(**validated_data)
+        return user
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+
+    def validate(self, data):
+        user = authenticate(**data)
+        if user and user.is_active:
+            return user
+        raise serializers.ValidationError("Invalid credentials")

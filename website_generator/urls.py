@@ -1,16 +1,9 @@
 from django.urls import path
-from .views import (
-    WebsiteGenerationView, 
-    WebsiteListView, 
-    WebsiteDetailView,
-    GeneratePreviewView,
-    PreviewWebsiteView
-)
+from .views import GeneratePageView, PreviewPageView, EditPageView, ListPagesView
 
 urlpatterns = [
-    path('generate/', WebsiteGenerationView.as_view(), name='website-generate'),
-    path('list/', WebsiteListView.as_view(), name='website-list'),
-    path('<str:website_id>/', WebsiteDetailView.as_view(), name='website-detail'),
-    path('<str:website_id>/preview/', GeneratePreviewView.as_view(), name='generate-preview'),
-    path('preview/<str:url_token>/', PreviewWebsiteView.as_view(), name='preview-website'),
+    path('generate/', GeneratePageView.as_view(), name='generate_page'),
+    path('preview/<str:preview_url>/', PreviewPageView.as_view(), name='preview_page'),
+    path('edit/<str:preview_url>/', EditPageView.as_view(), name='edit_page'),
+    path('list/', ListPagesView.as_view(), name='list_pages'),
 ]
